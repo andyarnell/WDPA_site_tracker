@@ -1,3 +1,4 @@
+# -*- coding: cp1252 -*-
 #####Aim: join wdpa ids from poly and point featureclasses for each version and spit into a csv with duplicates removed
 
 ##created by Andy Arnell 21/01/2015
@@ -17,6 +18,8 @@ from arcpy.sa import *
 import glob
 import string
 import time
+import csv
+
 
 print "Setting local parameters and inputs"
 
@@ -27,17 +30,13 @@ env.overwriteOutput = True
 
 beginTime = time.clock()
 
-##point to fodler to loop through and find all subfidlers within it (N.B. point to folder above the ones you are interested in)
-rawFolder1 = r"H:\WDPA_Time_series\2010-2014_WDPA_VERSIONS\2010\April2010"
-
+####point to fodler to loop through and find all subfidlers within it (N.B. point to folder above the ones you are interested in)
+#rawFolder1 = r"H:\WDPA_Time_series\2010-2014_WDPA_VERSIONS\2010\April2010"
+rawFolder1 = r"C:\Data\wdpa_site_tracker\raw\1512_December_2015\WDPA_Dec2015_Public\WDPA_Dec2015_Public.gdb"
 ##rawFolder1 = r"L:\WDPA_Time_series\Ed's_working_files\temp_WDPA_output_v1_02.gdb"
 
-##where output csvs are placed
-outFolder = r"H:\WDPA_Time_series\andy_working_files"
-
-rawFolder1 = r"C:\Data\wdpa_site_tracker\raw\1512_December_2015\WDPA_Dec2015_Public\WDPA_Dec2015_Public.gdb"
-
-
+####where output csvs are placed
+#outFolder = r"H:\WDPA_Time_series\andy_working_files"
 outFolder = r"C:\Data\wdpa_site_tracker\scratch"
 
 #set environment (where to look to list subfolders)
@@ -51,13 +50,13 @@ print wkspceList
 
 #######make list of possible substrings to search with for polygon and point featureclasses and the prefix for the wdpa file
 
-a=["poly","pol","polys"]
+a=["poly"]#,"pol","polys"]
 aupper=[x.upper() for x in a]
 atitle=[x.title() for x in a]
 shapeType1List=a#+ atitle  +aupper
 print shapeType1List
 
-a=["point","points","pnt","pnts","pt","pts"]
+a=["point"]#,"points","pnt","pnts","pt","pts"]
 aupper=[x.upper() for x in a]
 atitle=[x.title() for x in a]
 
@@ -76,7 +75,7 @@ print wildCardList
 #the name of wdpa id field (seems to be either wdpaid ,wdpa_id, or site_code (all upper case) - uncomment relevant one as required
 
 #fieldID ="WDPAID"
-fieldID ="""'WDPAID','NAME','DESIG_ENG','PARENT_ISO3'"""
+fields =['WDPAID','NAME','DESIG_ENG','PARENT_ISO3']
 
 
 #fieldID = "WDPA_ID"
@@ -94,7 +93,7 @@ for shapeType1 in shapeType1List:
                 srchStr2="*{0}*".format(shapeType2)
                 print "searching for polygon featureclass with substring: " +srchStr1
                 print "searching for point featureclass with substring: " +srchStr2
-                print "searching for field in featureclass called: " +fieldID
+                #print "searching for field in featureclass called: " +fields
                 #list all feature classes in folders using substrings and wildcards (*)
                 fcList1=arcpy.ListFeatureClasses("*"+wildCard+"*"+shapeType1+"*")
                 fcList2=arcpy.ListFeatureClasses("*"+wildCard+"*"+shapeType2+"*")
@@ -113,50 +112,47 @@ for shapeType1 in shapeType1List:
                         #print fc2Str
                         if fc1Str==fc2Str:
                             beginTime2 = time.clock()
+                            prefix=str(wkspce).rsplit('\\', 1) #get name of parent folder that file is contained in
+                            prefix=str(prefix[-1:]).strip("""'[]'""")
+                            print (prefix)
                             try:
-                                cursor=arcpy.da.SearchCursor(fc1,[fieldID])##make a search cursor to select all from field for featureclass fc1: fieldID
-                                ls1=list()
-                                #print ls1
-                                ##loop through rows in search cursor and append to a second list for polygon files(ls1)
-                                for row in cursor:
-                                    zval = (row[0])
-                                    #print zval #---if want to see wdpa ids then uncomment next line - but this will take tiem to run
-                                    ls1.append(zval)
-                                cursor1=arcpy.da.SearchCursor(fc2,[fieldID]) ##make a search cursor to select all from field for featureclass fc2: fieldID
-                                ls2=list()
-                                for row in cursor1:
-                                    zval = (row[0])
-                                    ls2.append(zval)
-                                #do some count checking between ls1 and ls2 (polygons and points) before and after removing duplicates
-                                print "ls1before: "+str(len(ls1))+shapeType1
-                                ls1=list(set(ls1))
-                                print "ls1after: "+str(len(ls1))+shapeType1
-                                print "ls2before: "+str(len(ls2))+shapeType2
-                                ls2=list(set(ls2))
-                                print "ls2after: "+str(len(ls2))+shapeType2
-                                ls=ls1+ls2 ##combine the two lists of wdpa ids into one
-                                print "lsbefore:"+str(len(ls))+"CombinedPolyPoint" #print number of wdpa ids for polygons and poitns combined before removing duplicates
-                                print wkspce
-                                prefix=str(wkspce).rsplit('\\', 1) #get name of parent folder that file is contained in
-                                prefix=str(prefix[-1:]).strip("""'[]'""")
-                                print prefix
-                                txtFile1=outFolder+"/preDuplRem_{0}_{1}.csv".format(prefix,fc1Str) #name and location of output file for wdpaids before duplicate removal 
-                                
-                                outFile1 = open(txtFile1, "w")#open csv (preDuplRem) to write into
-                                for ids in ls:
-                                    outFile1.write(str(ids) + "\n")#write to csv with a line in between each
-                                ls=list(set(ls))#remove duplicates from combined (polygons and points) list of wdpa ids
-                                print "lsafter:"+str(len(ls))+"CombinedPolyPoint"#print number of wdpa ids for polygons and poitns combined after removing duplicates
-                                txtFile2=outFolder+"/postDuplRem_{0}_{1}.csv".format(prefix,fc1Str)#name and location of output file for wdpaids after duplicate removal 
-                                outFile2 = open(txtFile2, "w")#open csv (postDuplRem) to write into
-                                outFile1.close()
-                                for ids in ls:
-                                    outFile2.write(str(ids) + "\n")#write to csv with a line in between each
-                                outFile2.close()#close csv
+                                CSVFile1 =outFolder+"/preDuplRem_{0}_{1}.csv".format(prefix,fc1Str)
+##                                with open(CSVFile1, 'w') as f1:
+##                                    #bob=csv.writer(CSVFile1, delimiter=' ',quotechar='|', quoting=csv.QUOTE_MINIMAL)
+##                                    f1.write('  '.join(fields)+'\n') 
+##                                    with arcpy.da.SearchCursor(fc1, fields) as cursor1:
+##                                        for row in cursor1:
+##                                            print('{0}, {1}, {2}, {3}'.format(str(row[0]), str(row[1]),str(row[2]),str(row[3]) ))
+##                                            f1.write('  '.join([str(r) for r in row])+'\n')
+##                                f1.close()
+                                with open(CSVFile1, 'wb') as csvfile:
+                                    spamwriter = csv.writer(csvfile, delimiter=',',quoting=csv.QUOTE_MINIMAL)
+                                    with arcpy.da.SearchCursor(fc2, fields) as cursor1:
+                                        for row in cursor1:
+                                            #row=[s.encode('utf-8') for s in row]
+                                            #print('{0}, {1}, {2}, {3}'.format(str(row[0]), str(row[1]),str(row[2]),str(row[3]) ) )
+                                            spamwriter.writerow((row))
+                                            #writer.writerow(','.join([str(r) for r in row])+'\n')
+                                            
                             except:
-                                print "ERROR - "+fieldID+"_not present - skipping..." #if wdpa id field (fieldID) is not correct print error message
-                            print "Finished processing featureclass: {0} in {1} minutes \n".format(fc1Str,str(round(((time.clock() - beginTime2)/60),2)))
-
+                                print "ERROR - fields_not present - skipping..." #if wdpa id field (fieldID) is not correct print error message
+                                print "Finished processing featureclass: {0} in {1} minutes \n".format(fc1Str,str(round(((time.clock() - beginTime2)/60),2)))
+##                            try:
+##                                #CSVFile2 = r"c:\Data\wdpa_site_tracker\scratch\test2.csv"
+##                                #with open(CSVFile2, 'w') as f2:
+##                                with open(CSVFile1, 'a') as f2:
+##                                    #f2.write(','.join(fields)+'\n') 
+##                                    with arcpy.da.SearchCursor(fc2, fields) as cursor2:
+##                                        for row in cursor2:
+##                                            print('{0}, {1}, {2}, {3}'.format(str(row[0]), str(row[1]),str(row[2]),str(row[3]) ))
+##                                            f2.write('  '.join([str(r) for r in row])+'\n')
+##
+##                                f2.close()
+##                                #f1.close()
+##                            except:
+##                                print "ERROR - fields_not present - skipping..." #if wdpa id field (fieldID) is not correct print error message
+##                                print "Finished processing featureclass: {0} in {1} minutes \n".format(fc1Str,str(round(((time.clock() - beginTime2)/60),2)))
+                                
 print "Finished processing"
 print "Total time elapsed: {0} minutes".format(str(round(((time.clock() - beginTime)/60),2)))
    
