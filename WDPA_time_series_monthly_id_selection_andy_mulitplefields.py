@@ -34,6 +34,8 @@ beginTime = time.clock()
 #rawFolder1 = r"H:\WDPA_Time_series\2010-2014_WDPA_VERSIONS\2010\April2010"
 rawFolder1 = r"C:\Data\wdpa_site_tracker\raw\1512_December_2015\WDPA_Dec2015_Public\WDPA_Dec2015_Public.gdb"
 ##rawFolder1 = r"L:\WDPA_Time_series\Ed's_working_files\temp_WDPA_output_v1_02.gdb"
+#rawFolder1= r"L:\WDPA_Time_series\2010-2014_WDPA_VERSIONS\2010\1002_February_2010\Jan-Feb10\WDPA_100210\Current_Schema"
+#rawFolder1= r"L:\WDPA_Time_series\2010-2014_WDPA_VERSIONS\2010\1002_February_2010\Jan-Feb10\WDPA_100210"
 
 ####where output csvs are placed
 #outFolder = r"H:\WDPA_Time_series\andy_working_files"
@@ -50,18 +52,18 @@ print wkspceList
 
 #######make list of possible substrings to search with for polygon and point featureclasses and the prefix for the wdpa file
 
-a=["poly"]#,"pol","polys"]
+a=["poly","pol","polys"]
 aupper=[x.upper() for x in a]
 atitle=[x.title() for x in a]
-shapeType1List=a#+ atitle  +aupper
+shapeType1List=a# + atitle  +aupper
 print shapeType1List
 
-a=["point"]#,"points","pnt","pnts","pt","pts"]
+a=["point","points","pnt","pnts","pt","pts"]
 aupper=[x.upper() for x in a]
 atitle=[x.title() for x in a]
 
 
-shapeType2List=a#+ atitle +aupper
+shapeType2List=a #+ atitle +aupper
 print shapeType2List
 
 #wdpa featureclass prefix list
@@ -75,11 +77,19 @@ print wildCardList
 #the name of wdpa id field (seems to be either wdpaid ,wdpa_id, or site_code (all upper case) - uncomment relevant one as required
 
 #fieldID ="WDPAID"
-fields =['WDPAID','NAME','DESIG_ENG','PARENT_ISO3']
+fields1 =['WDPAID','NAME','DESIG_ENG','DESIG_TYPE','ISO3','PARENT_ISO3']
+fields2 =['WDPA_ID','NAME','DESIG_ENG','DESIG_TYPE','COUNTRY']
+fields3 =['WDPA_ID','NAME','DESIG_ENG','DESIG_TYPE','COUNTRY']
+fields4 =['WDPA_ID','NAME','DESIG_ENG','COUNTRY']
+fields5 =['SITE_ID','NAME_ENG','DESIG_ENG','SITE_TYPE','COUNTRY']
 
 
-#fieldID = "WDPA_ID"
-##fieldID = "SITE_CODE"
+fields =['WDPAID','NAME','DESIG_ENG','DESIG_TYPE','ISO3','PARENT_ISO3']
+##
+##fldCombos=[fields1,fields2,fields3,fields4,fields5]
+##
+##for fields in fldCombos:
+##    print fields     
 
 ##looping through list of names for polygon (shapeType1List), point(shapeType2List) and prefix (wildCardList) for featureclass within all subfolders/gdb within the rawFolder1
 for shapeType1 in shapeType1List:
@@ -115,43 +125,30 @@ for shapeType1 in shapeType1List:
                             prefix=str(wkspce).rsplit('\\', 1) #get name of parent folder that file is contained in
                             prefix=str(prefix[-1:]).strip("""'[]'""")
                             print (prefix)
+##                            for fields in fldCombos:
+##                                print fields
                             try:
                                 CSVFile1 =outFolder+"/preDuplRem_{0}_{1}.csv".format(prefix,fc1Str)
-##                                with open(CSVFile1, 'w') as f1:
-##                                    #bob=csv.writer(CSVFile1, delimiter=' ',quotechar='|', quoting=csv.QUOTE_MINIMAL)
-##                                    f1.write('  '.join(fields)+'\n') 
-##                                    with arcpy.da.SearchCursor(fc1, fields) as cursor1:
-##                                        for row in cursor1:
-##                                            print('{0}, {1}, {2}, {3}'.format(str(row[0]), str(row[1]),str(row[2]),str(row[3]) ))
-##                                            f1.write('  '.join([str(r) for r in row])+'\n')
-##                                f1.close()
                                 with open(CSVFile1, 'wb') as csvfile:
                                     spamwriter = csv.writer(csvfile, delimiter=',',quoting=csv.QUOTE_MINIMAL)
-                                    with arcpy.da.SearchCursor(fc2, fields) as cursor1:
+                                    spamwriter.writerow((fields))
+                                    with arcpy.da.SearchCursor(fc1, fields) as cursor1:
                                         for row in cursor1:
-                                            #row=[s.encode('utf-8') for s in row]
-                                            #print('{0}, {1}, {2}, {3}'.format(str(row[0]), str(row[1]),str(row[2]),str(row[3]) ) )
                                             spamwriter.writerow((row))
-                                            #writer.writerow(','.join([str(r) for r in row])+'\n')
-                                            
+                                csvfile.close()
                             except:
                                 print "ERROR - fields_not present - skipping..." #if wdpa id field (fieldID) is not correct print error message
                                 print "Finished processing featureclass: {0} in {1} minutes \n".format(fc1Str,str(round(((time.clock() - beginTime2)/60),2)))
-##                            try:
-##                                #CSVFile2 = r"c:\Data\wdpa_site_tracker\scratch\test2.csv"
-##                                #with open(CSVFile2, 'w') as f2:
-##                                with open(CSVFile1, 'a') as f2:
-##                                    #f2.write(','.join(fields)+'\n') 
-##                                    with arcpy.da.SearchCursor(fc2, fields) as cursor2:
-##                                        for row in cursor2:
-##                                            print('{0}, {1}, {2}, {3}'.format(str(row[0]), str(row[1]),str(row[2]),str(row[3]) ))
-##                                            f2.write('  '.join([str(r) for r in row])+'\n')
-##
-##                                f2.close()
-##                                #f1.close()
-##                            except:
-##                                print "ERROR - fields_not present - skipping..." #if wdpa id field (fieldID) is not correct print error message
-##                                print "Finished processing featureclass: {0} in {1} minutes \n".format(fc1Str,str(round(((time.clock() - beginTime2)/60),2)))
+                            try:
+                                with open(CSVFile1, 'ab') as csvfile:
+                                    spamwriter = csv.writer(csvfile, delimiter=',',quoting=csv.QUOTE_MINIMAL)
+                                    with arcpy.da.SearchCursor(fc2, fields) as cursor1:
+                                        for row in cursor1:
+                                            spamwriter.writerow((row))
+                                csvfile.close()
+                            except:
+                                print "ERROR - fields_not present - skipping..." #if wdpa id field (fieldID) is not correct print error message
+                                print "Finished processing featureclass: {0} in {1} minutes \n".format(fc1Str,str(round(((time.clock() - beginTime2)/60),2)))
                                 
 print "Finished processing"
 print "Total time elapsed: {0} minutes".format(str(round(((time.clock() - beginTime)/60),2)))
