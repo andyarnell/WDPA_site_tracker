@@ -27,30 +27,7 @@ class UnicodeWriter:
     A CSV writer which will write rows to CSV file "f",
     which is encoded in the given encoding.
     """
-
-##    def __init__(self, f, dialect=csv.excel, encoding="utf-8", **kwds):
-##        # Redirect output to a queue
-##        self.queue = cStringIO.StringIO()
-##        self.writer = csv.writer(self.queue, dialect=dialect, **kwds)
-##        self.stream = f
-##        self.encoder = codecs.getincrementalencoder(encoding)()
-##
-##    def writerow(self, row):
-##        self.writer.writerow([s.encode("utf-8") for s in row])
-##        # Fetch UTF-8 output from the queue ...
-##        data = self.queue.getvalue()
-##        data = data.decode("utf-8")
-##        # ... and reencode it into the target encoding
-##        data = self.encoder.encode(data)
-##        # write to the target stream
-##        self.stream.write(data)
-##        # empty queue
-##        self.queue.truncate(0)
-##
-##    def writerows(self, rows):
-##        for row in rows:
-##            self.writerow(row)
-            
+           
 print "Setting local parameters and inputs"
 
 # Check out the ArcGIS Spatial Analyst extension license
@@ -60,12 +37,15 @@ env.overwriteOutput = True
 
 beginTime = time.clock()
 
-####point to fodler to loop through and find all subfidlers within it (N.B. point to folder above the ones you are interested in)
-#rawFolder1 = r"H:\WDPA_Time_series\2010-2014_WDPA_VERSIONS\2010\April2010"
-#rawFolder1 = r"C:\Data\wdpa_site_tracker\raw\1512_December_2015\WDPA_Dec2015_Public\WDPA_Dec2015_Public.gdb"
-#rawFolder1 = r"L:\WDPA_Time_series\Ed's_working_files\temp_WDPA_output_v1_02.gdb"
-#rawFolder1= r"L:\WDPA_Time_series\2010-2014_WDPA_VERSIONS\2010\1002_February_2010\Jan-Feb10\WDPA_100210"
-rawFolder1= r"C:\Data\wdpa_site_tracker\raw\2010\1004_April_2010"
+####point to folder to loop through and find all subfidlers within it (N.B. point to folder above the ones you are interested in)
+#rawFolder1= r"L:\WDPA_Time_series\2003-2009_WDPA_VERSIONS"
+#rawFolder1= r"L:\WDPA_Time_series\2010-2014_WDPA_VERSIONS"
+#rawFolder1= r"L:\WDPA_Time_series\2015-2018_WDPA_VERSIONS"
+#rawFolder1= r"C:\Data\wdpa_site_tracker\raw\2003-2009_WDPA_VERSIONS"
+rawFolder1= r"C:\Data\wdpa_site_tracker\raw\2003-2009_WDPA_VERSIONS"
+
+
+#rawFolder1= r"C:\Data\wdpa_site_tracker\raw\2010\1004_April_2010"
 
 ####where output csvs are placed
 #outFolder = r"H:\WDPA_Time_series\andy_working_files"
@@ -81,7 +61,6 @@ wkspceList=[x[0] for x in os.walk(path)]
 print wkspceList
 
 #######make list of possible substrings to search with for polygon and point featureclasses and the prefix for the wdpa file
-
 a=["poly","pol","polys"]
 aupper=[x.upper() for x in a]
 atitle=[x.title() for x in a]
@@ -97,7 +76,7 @@ shapeType2List=a + atitle +aupper
 print shapeType2List
 
 #wdpa featureclass prefix list
-a=["wdpa","international"]#,"national","nat","int"]
+a=["wdpa","international","national","nat","int"]
 aupper=[x.upper() for x in a]
 atitle=[x.title() for x in a]
 
@@ -203,8 +182,7 @@ for shapeType1 in shapeType1List:
                                                         row1.append(str(item))
                                                 #print ','.join(row1)
                                                 csvfile.write(','.join(row1)+"\n")
-                                    csvfile.close()
-                                    
+                                    csvfile.close()                                  
 ##                                    
 ####                                    except:
 ####                                        print "ERROR - fields_not present - skipping..." #if wdpa id field (fieldID) is not correct print error message
